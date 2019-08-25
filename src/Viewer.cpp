@@ -229,21 +229,14 @@ namespace igl
 				// Rendering loop
 				const int num_extra_frames = 5;
 				int frame_counter = 0;
+				int left = true;
 				while (!glfwWindowShouldClose(window))
 				{
 					double tic = get_seconds();
-					draw();
-					glfwSwapBuffers(window);
-					if (core().is_animating || frame_counter++ < num_extra_frames)
-					{
-						glfwPollEvents();
-						// In microseconds
-						double duration = 1000000.*(get_seconds() - tic);
-						const double min_duration = 1000000. / core().animation_max_fps;
-						if (duration < min_duration)
-						{
-							std::this_thread::sleep_for(std::chrono::microseconds((int)(min_duration - duration)));
-						}
+					if (left) {
+						core().camera_eye << -3, 0, 5;
+
+						draw();
 						// Allocate temporary buffers
 						Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> R(1280, 800);
 						Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> G(1280, 800);
@@ -255,7 +248,45 @@ namespace igl
 							data(), false, R, G, B, A);
 
 						// Save it to a PNG
-						igl::png::writePNG(R, G, B, A, "out.png");
+						igl::png::writePNG(R, G, B, A, "left.png");
+
+
+						std::cout << "left";
+					}
+
+					else {
+
+						core().camera_eye << 3, 0, 5;
+						draw();
+						// Allocate temporary buffers
+						Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> R(1280, 800);
+						Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> G(1280, 800);
+						Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> B(1280, 800);
+						Eigen::Matrix<unsigned char, Eigen::Dynamic, Eigen::Dynamic> A(1280, 800);
+
+						// Draw the scene in the buffers
+						core().draw_buffer(
+							data(), false, R, G, B, A);
+
+						// Save it to a PNG
+						igl::png::writePNG(R, G, B, A, "right.png");
+
+						std::cout << "right";
+					}
+
+					left = !left;
+
+					glfwSwapBuffers(window);
+					if (core().is_animating || frame_counter++ < num_extra_frames)
+					{
+						glfwPollEvents();
+						// In microseconds
+						double duration = 1000000.*(get_seconds() - tic);
+						const double min_duration = 1000000. / core().animation_max_fps;
+						if (duration < min_duration)
+						{
+							std::this_thread::sleep_for(std::chrono::microseconds((int)(min_duration - duration)));
+						}
 					}
 					else
 					{
